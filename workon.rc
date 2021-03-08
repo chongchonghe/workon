@@ -1,5 +1,5 @@
 export WO_ROOT="${HOME}/tools/programs/workon"
-export WO_PRINT="${WO_ROOT}/getdir"
+export WO_GETDIR="${WO_ROOT}/getdir"
 export WO_JSON="${HOME}/.config/workon/projects.json"
 
 function o() {
@@ -9,13 +9,10 @@ function o() {
 
 usage: o tag
 
-Jump to the directory characterized by tag
+Jump to the directory tag
 
 
 -------------- Two or more arguments -----------------
-
-o -p[rint] tag: print dir of tag
-
 "
         python "${WO_ROOT}/workon" -h
         return
@@ -42,7 +39,7 @@ o -p[rint] tag: print dir of tag
     if [ "$#" -gt 1 ]; then
 	case $1 in
 	    -p | -print )
-		${WO_PRINT} $2 ;;
+		${WO_GETDIR} $2 ;;
 	    * )
 		python "${WO_ROOT}/workon" $@
 	esac

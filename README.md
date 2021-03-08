@@ -1,17 +1,14 @@
 # Setup
 
-In .zshrc
+In .zshrc (or equivalent in other shells)
 
 ``` sh
 source ~/tools/programs/workon/workon.rc
 ```
 
-In .zshenv
+In .zshenv (or equivalent in other shells)
 
 ```sh
-# ~/tools: 'workon' and other programs
-alias getdir="${HOME}/tools/programs/workon/getdir"
 source ~/tools/programs/workon/workon.rc
-export PATH=$PATH:~/tools/bin
+alias getdir="${HOME}/tools/programs/workon/getdir"
 ```
-

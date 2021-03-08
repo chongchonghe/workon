@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import subprocess
+import json
+from argparse import ArgumentParser, RawTextHelpFormatter
+# from getdir import JSON_PATH
+
+def parse_arguments():
+    parser = ArgumentParser(description="A simple utility to manage projects",
+                            formatter_class=RawTextHelpFormatter)
+    parser.add_argument("action", help="""The action. One of the following:
+
+add: add flag dir
+    add a project
+update: update flag dir
+    update a project
+info: info flag
+    show info of a project
+rm: rm flag
+    remove a project
+rename: rename flag1 flag2
+    rename flag1 to flag2
+python: python project_name
+    Create a structured directory for a Python project.
+    Will create the following files and directories:
+    docs/, plots/, writeup/, main/, main/bin/,
+    main/project1/, main/src/, README.md
+cp: cp flag
+    copy the directory to clipboard
+
+""")
+    parser.add_argument("flag", help="The flag.")
+    parser.add_argument("args", nargs='?', help="directory")
+    return parser.parse_args()
+
+def make_project(proj):
+    """ Initiate a project """
+    os.mkdir(proj)
+    for _dir in ["docs", "writeup", "main", "plots"]:
+        os.mkdir("{}/{}".format(proj, _dir))
+    for _dir in ["bin", "src", "project1"]:
+        os.mkdir("{}/main/{}".format(proj, _dir))
+    os.system("touch {}/README.md".format(proj))
+
+def main(args, is_force=False):
+    json_fn = os.path.expanduser(os.environ['WO_JSON'])
+    json_dir = os.path.dirname(json_fn)
+    if not os.path.isdir(json_dir):
+        os.system("mkdir -p " + json_dir)
+    if not os.path.isfile(json_fn):
+        with open(json_fn, 'w') as f:
+            json.dump({}, f, indent=2)
+    is_write = False
+    if args.action in ["add", '+']:
+        is_write = True
+        with open(json_fn, 'r') as f:
+            data = json.load(f)
+            if not is_force and args.flag in data:
+                print("{} already defined in projects. Use 'update flag dir' to update a project".format(args.flag))
+                return
+            thisdir = os.path.abspath(args.args)
+            dir_dict = {
+                "dir": thisdir
+            }
+            print("Added the following to project {}:".format(args.flag))
+            print(dir_dict)
+            data[args.flag] = dir_dict
+    elif args.action == "update":
+        args.action = "add"
+        main(args, is_force=True)
+    elif args.action == "info":
+        with open(json_fn, 'r') as f:
+            data = json.load(f)
+            print(data[args.flag])
+    elif args.action in ["rm", '-']:
+        is_write = True
+        with open(json_fn, 'r') as f:
+            data = json.load(f)
+            if args.flag in data.keys():
+                del data[args.flag]
+                print(f"{args.flag} is removed")
+            else:
+                print(f"{args.flag} is not in the project list")
+    elif args.action == "rename":
+        is_write = True
+        with open(json_fn, 'r') as f:
+            data = json.load(f)
+        data[args.args] = data[args.flag]
+        del data[args.flag]
+    elif args.action == "python":
+        # initiate a Python project
+        make_project(args.flag)
+    elif args.action == "cp":
+        with open(json_fn, 'r') as f:
+            data = json.load(f)
+        subprocess.run("pbcopy", universal_newlines=True,
+                       input=data[args.flag]["dir"],)
+        print(data[args.flag]["dir"], 'copied to clipboard')
+    elif args.action == "print":
+        with open(json_fn, 'r') as f:
+            data = json.load(f)
+        print(data[args.flag]["dir"])
+
+    if is_write:
+        with open(json_fn, 'w') as f:
+            json.dump(data, f, indent=2, sort_keys=True)
+
+if __name__ == '__main__':
+    sys.exit(main(parse_arguments()))
